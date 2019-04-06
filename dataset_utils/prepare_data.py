@@ -1,5 +1,5 @@
 """
-The script maps train data from
+The script maps the data from the default raw format, to one that is consumed by the pipeline.
 
 ```
 {data_path}/CVC-VideoClinicDBtrain_valid
