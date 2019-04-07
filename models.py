@@ -62,7 +62,6 @@ class UNet11(nn.Module):
             num_filters (int):
             pretrained (bool): If encoder initialized with the weights from ImageNet
         """
-
         super().__init__()
         self.pool = nn.MaxPool2d(2, 2)
 
@@ -327,6 +326,7 @@ class UNet(nn.Module):
 
     Implementation from https://github.com/lopuhin/mapillary-vistas-2017/blob/master/unet_models.py
     """
+
     output_downscaled = 1
     module = UNetModule
 

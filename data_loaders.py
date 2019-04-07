@@ -37,4 +37,3 @@ def load_image(path):
 def load_mask(path):
     mask = cv2.imread(str(path), 0)
     return mask
-   

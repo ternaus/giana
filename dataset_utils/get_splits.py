@@ -12,7 +12,7 @@ import numpy as np
 
 
 def collect_image_paths(video_ids, data_path: Path):
-    """Gets the list of the image paths in a given videos.
+    """Get the list of the image paths in a given videos.
 
     Args:
         video_ids:
@@ -31,7 +31,7 @@ def collect_image_paths(video_ids, data_path: Path):
 
 
 def get_train_val_image_paths(data_path: Path, fold_id: 0, num_splits: int = 5):
-    """Returns list of image paths to files in train in val for a given number of folds and fold id.
+    """Return list of image paths to files in train in val for a given number of folds and fold id.
 
     Args:
         data_path (Path): Path to the data.
