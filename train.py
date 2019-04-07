@@ -12,6 +12,7 @@ from torch.utils.data import DataLoader
 from collections import OrderedDict  # noqa F401
 import augmentations
 from torch import nn
+from losses import LossBinary
 
 model_names = {'UNet11': UNet11}
 
@@ -47,6 +48,7 @@ def main():
     arg('-j', '--num_workers', default=1, type=int, help='Number of CPU threads to use.')
     arg('-b', '--batch_size', default=1, type=int, help='Size of the batch')
     arg('-d', '--device_ids', default='0', type=str, help='GPU device ids to use.')
+    arg('-j', '--jaccard_weight', default=0.3, type=float, help='Weight for soft Jaccard in loss.')
     arg('--num_folds', default=5, type=int, help='Number of folds.')
     args = parser.parse_args()
 
@@ -69,7 +71,7 @@ def main():
     # model, criterion, optimizer
     model = get_model(args.model_name, args.device_ids)
 
-    criterion = torch.nn.CrossEntropyLoss()
+    criterion = LossBinary(jaccard_weight=args.jaccard_weight)
     optimizer = torch.optim.Adam(model.parameters())
 
     # model runner
