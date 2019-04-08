@@ -28,13 +28,13 @@ def get_loader(file_names, shuffle=False, transform=None, batch_size=1, num_work
 
 
 def get_model(model_name, device_ids):
-    # model, criterion, optimizer
     device_ids = list(map(int, device_ids.split(',')))
-    model = model_names[model_name]
+
+    model = model_names[model_name]()
 
     model = nn.DataParallel(model, device_ids=device_ids).cuda()
 
-    return model.cuda()
+    return model
 
 
 def main():
@@ -47,8 +47,8 @@ def main():
     arg('-m', '--model_name', default='UNet11', type=str, help='Name of the network')
     arg('-j', '--num_workers', default=1, type=int, help='Number of CPU threads to use.')
     arg('-b', '--batch_size', default=1, type=int, help='Size of the batch')
-    arg('-d', '--device_ids', default='0', type=str, help='GPU device ids to use.')
-    arg('-j', '--jaccard_weight', default=0.3, type=float, help='Weight for soft Jaccard in loss.')
+    arg('-d', '--device_ids', default='0,1', type=str, help='GPU device ids to use.')
+    arg('--jaccard_weight', default=0.3, type=float, help='Weight for soft Jaccard in loss.')
     arg('--num_folds', default=5, type=int, help='Number of folds.')
     args = parser.parse_args()
 
@@ -83,7 +83,7 @@ def main():
         criterion=criterion,
         optimizer=optimizer,
         loaders=loaders,
-        logdir=args.logdir,
+        logdir=args.log_dir,
         num_epochs=args.num_epochs,
         verbose=True
     )

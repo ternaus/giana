@@ -16,7 +16,7 @@ class GianaDataset(Dataset):
 
         file_name = image_file_path.name
 
-        mask_file_path = image_file_path.parent.parent / 'mask' / file_name
+        mask_file_path = image_file_path.parent.parent / 'masks' / file_name
 
         mask = load_mask(mask_file_path)
 
