@@ -6,15 +6,17 @@ from pathlib import Path
 from dataset_utils.get_splits import get_train_val_image_paths
 from catalyst.dl.experiments import SupervisedRunner
 import torch
-from models import UNet11
+from models import UNet11, UNet16
 from data_loaders import GianaDataset
 from torch.utils.data import DataLoader
 from collections import OrderedDict  # noqa F401
 import augmentations
-from torch import nn
 from losses import LossBinary
+from utils import EpochJaccardMetric
 
-model_names = {'UNet11': UNet11}
+model_names = {'UNet11': UNet11,
+               'UNet16': UNet16,
+               }
 
 
 def get_loader(file_names, shuffle=False, transform=None, batch_size=1, num_workers=1):
@@ -27,13 +29,8 @@ def get_loader(file_names, shuffle=False, transform=None, batch_size=1, num_work
     )
 
 
-def get_model(model_name, device_ids):
-    device_ids = list(map(int, device_ids.split(',')))
-
+def get_model(model_name):
     model = model_names[model_name]()
-
-    model = nn.DataParallel(model, device_ids=device_ids).cuda()
-
     return model
 
 
@@ -47,7 +44,7 @@ def main():
     arg('-m', '--model_name', default='UNet11', type=str, help='Name of the network')
     arg('-j', '--num_workers', default=1, type=int, help='Number of CPU threads to use.')
     arg('-b', '--batch_size', default=1, type=int, help='Size of the batch')
-    arg('-d', '--device_ids', default='0,1', type=str, help='GPU device ids to use.')
+    arg('--lr', default=0.0001, type=float, help='Learning Rate')
     arg('--jaccard_weight', default=0.3, type=float, help='Weight for soft Jaccard in loss.')
     arg('--num_folds', default=5, type=int, help='Number of folds.')
     args = parser.parse_args()
@@ -62,17 +59,21 @@ def main():
     train_transform = augmentations.get_train_transform()
     val_transform = augmentations.get_val_transform()
 
-    train_loader = get_loader(train_file_names, train_transform, args.num_workers)
-    val_loader = get_loader(val_files_names, val_transform, args.num_workers)
+    train_loader = get_loader(train_file_names, shuffle=True, transform=train_transform, num_workers=args.num_workers,
+                              batch_size=args.batch_size)
+    val_loader = get_loader(val_files_names, shuffle=False, transform=val_transform, num_workers=args.num_workers,
+                            batch_size=args.batch_size)
 
     # data
     loaders = OrderedDict({"train": train_loader, "valid": val_loader})
 
     # model, criterion, optimizer
-    model = get_model(args.model_name, args.device_ids)
+    model = get_model(args.model_name)
 
     criterion = LossBinary(jaccard_weight=args.jaccard_weight)
-    optimizer = torch.optim.Adam(model.parameters())
+    optimizer = torch.optim.Adam(model.parameters(), lr=args.lr)
+
+    scheduler = torch.optim.lr_scheduler.MultiStepLR(optimizer, milestones=[10, 20, 30], gamma=0.3)
 
     # model runner
     runner = SupervisedRunner()
@@ -83,9 +84,12 @@ def main():
         criterion=criterion,
         optimizer=optimizer,
         loaders=loaders,
-        logdir=args.log_dir,
+        callbacks=[EpochJaccardMetric()],
+        scheduler=scheduler,
+        logdir=args.log_dir + '_' + args.model_name + '_' + str(args.fold_id),
         num_epochs=args.num_epochs,
-        verbose=True
+        main_metric='jaccard',
+        verbose=True,
     )
 
 

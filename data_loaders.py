@@ -1,5 +1,8 @@
 from torch.utils.data import Dataset
 import cv2
+from albumentations.pytorch.functional import img_to_tensor
+import torch
+import numpy as np
 
 
 class GianaDataset(Dataset):
@@ -26,7 +29,7 @@ class GianaDataset(Dataset):
 
         image, mask = augmented["image"], augmented["mask"]
 
-        return image, mask
+        return img_to_tensor(image), torch.from_numpy(np.expand_dims(mask, 0)).float()
 
 
 def load_image(path):
@@ -35,5 +38,5 @@ def load_image(path):
 
 
 def load_mask(path):
-    mask = cv2.imread(str(path), 0)
+    mask = (cv2.imread(str(path), 0) > 0).astype(np.uint8)
     return mask
