@@ -6,7 +6,7 @@ from pathlib import Path
 from dataset_utils.get_splits import get_train_val_image_paths
 from catalyst.dl.experiments import SupervisedRunner
 import torch
-from models import UNet11, UNet16
+from models import get_model
 from data_loaders import GianaDataset
 from torch.utils.data import DataLoader
 from collections import OrderedDict  # noqa F401
@@ -14,9 +14,17 @@ import augmentations
 from losses import LossBinary
 from utils import EpochJaccardMetric
 
-model_names = {'UNet11': UNet11,
-               'UNet16': UNet16,
-               }
+
+encoders = ['vgg11', 'vgg13', 'vgg16', 'vgg19', 'vgg11bn', 'vgg13bn', 'vgg16bn', 'vgg19bn',
+            'densenet121', 'densenet169', 'densenet201', 'densenet161',
+            'dpn68', 'dpn68b', 'dpn92', 'dpn98', 'dpn107', 'dpn131',
+            'inceptionresnetv2',
+            'resnet18', 'resnet34', 'resnet50', 'resnet101', 'resnet152',
+            'se_resnet50',
+            'se_resnet101', 'se_resnet152',
+            'se_resnext50_32x4d', 'se_resnext101_32x4d',
+            'senet154'
+            ]
 
 
 def get_loader(file_names, shuffle=False, transform=None, batch_size=1, num_workers=1):
@@ -29,11 +37,6 @@ def get_loader(file_names, shuffle=False, transform=None, batch_size=1, num_work
     )
 
 
-def get_model(model_name):
-    model = model_names[model_name]()
-    return model
-
-
 def main():
     parser = argparse.ArgumentParser()
     arg = parser.add_argument
@@ -41,7 +44,7 @@ def main():
     arg('-f', '--fold_id', default=0, type=int, help='Fold id.')
     arg('-l', '--log_dir', default='./logdir', type=str, help='Path to store logs')
     arg('-n', '--num_epochs', default=42, type=int, help='Number of epochs.')
-    arg('-m', '--model_name', default='UNet11', type=str, help='Name of the network')
+    arg('-m', '--model_name', default='resnet18', type=str, help='Name of the network', choices=encoders)
     arg('-j', '--num_workers', default=1, type=int, help='Number of CPU threads to use.')
     arg('-b', '--batch_size', default=1, type=int, help='Size of the batch')
     arg('--lr', default=0.0001, type=float, help='Learning Rate')
